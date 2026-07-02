@@ -54,10 +54,31 @@ async with AsyncWebUplink() as client:
 
 ## What you can build
 
-- **AI agents that act on the web** — browse any site, get back typed tool definitions, execute actions
+- **AI agents that act on the web** — browse any site, get back named, callable tool definitions, execute actions
 - **No selectors, no scraping** — WebUplink understands pages and generates callable tools automatically
 - **Multi-step workflows** — sessions persist across navigations, so your agent can search → filter → select → checkout
 - **Any website, zero configuration** — works on sites you've never seen before
+
+## Error handling
+
+Every non-2xx response raises a typed `WebUplinkError` carrying the machine-readable `code`, HTTP `status_code`, and `request_id` (cite it in support tickets):
+
+```python
+from webuplink import WebUplink, WebUplinkError
+
+client = WebUplink()
+
+try:
+    page = client.browse("https://example.com")
+except WebUplinkError as err:
+    print(err.code)         # e.g. 'QUOTA_EXCEEDED', 'SITE_BLOCKED'
+    print(err.status_code)  # e.g. 429, 502
+    print(err.request_id)   # 'req-abc-123'
+```
+
+Transient errors that carry `retry_after` (e.g. `BROWSER_ERROR`, `AI_PROCESSING_ERROR`) are retried automatically for observe-only requests. `SITE_BLOCKED` — the site served a bot-verification challenge or access-denied page; the request is **not billed** — carries no `retry_after` and is never auto-retried. Tool executions are never auto-retried (non-idempotent).
+
+Full error reference at **[webuplink.ai/docs/errors](https://webuplink.ai/docs/errors)**.
 
 ## Documentation
 

@@ -89,3 +89,33 @@ def test_browse_result_invalid() -> None:
 def test_usage() -> None:
     u = Usage(action_count=10, action_limit=100, period_start="2026-06-01T00:00:00Z")
     assert u.action_count == 10
+
+
+def test_error_code_union_matches_server_taxonomy() -> None:
+    """Pin the ErrorCode literal to the codes the API actually emits."""
+    from typing import get_args
+
+    from webuplink import ErrorCode
+
+    codes = set(get_args(ErrorCode))
+    assert codes == {
+        "UNAUTHORIZED",
+        "INVALID_REQUEST",
+        "VALIDATION_ERROR",
+        "DOMAIN_BLOCKED",
+        "SESSION_NOT_FOUND",
+        "SESSION_BUSY",
+        "SESSION_EXPIRED",
+        "PLAN_RESTRICTED",
+        "QUOTA_EXCEEDED",
+        "RATE_LIMITED",
+        "CONCURRENCY_EXCEEDED",
+        "CONCURRENCY_UNAVAILABLE",
+        "FREE_TIER_DEGRADED",
+        "BROWSER_ERROR",
+        "AI_PROCESSING_ERROR",
+        "SITE_BLOCKED",
+        "INTERNAL_ERROR",
+    }
+    # PAGE_ANALYSIS_FAILED was removed — never emitted by the API.
+    assert "PAGE_ANALYSIS_FAILED" not in codes

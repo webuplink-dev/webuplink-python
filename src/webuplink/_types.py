@@ -219,9 +219,18 @@ ErrorCode = Literal[
     "PLAN_RESTRICTED",
     "QUOTA_EXCEEDED",
     "RATE_LIMITED",
+    # Concurrent-session limit reached (503 + retry_after).
+    "CONCURRENCY_EXCEEDED",
+    # Free-tier session admission temporarily unverifiable (503 + retry_after).
+    "CONCURRENCY_UNAVAILABLE",
+    # Free-tier tool execution degraded to observe-only until UTC midnight (503 + retry_after).
+    "FREE_TIER_DEGRADED",
+    # Browser infrastructure unavailable (503 + retry_after).
     "BROWSER_ERROR",
-    "PAGE_ANALYSIS_FAILED",
+    # AI processing failed (502 + retry_after).
     "AI_PROCESSING_ERROR",
+    # Bot-challenge/access-denied interstitial (502, no retry_after, unbilled).
+    "SITE_BLOCKED",
     "INTERNAL_ERROR",
 ]
 """All possible machine-readable error codes in API error responses."""

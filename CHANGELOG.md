@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.1 (2026-07-02)
+
+### Changes
+
+- `ErrorCode`: added `CONCURRENCY_EXCEEDED`, `CONCURRENCY_UNAVAILABLE`, `FREE_TIER_DEGRADED`, and `SITE_BLOCKED`; removed `PAGE_ANALYSIS_FAILED` (never emitted by the API)
+- README: error-handling section covering `code` / `status_code` / `request_id` and retry semantics (`SITE_BLOCKED` is unbilled and never auto-retried)
+- README: tool definitions described as named and callable rather than typed
+
 ## 0.1.0 (2026-06-30)
 
 Initial public release.

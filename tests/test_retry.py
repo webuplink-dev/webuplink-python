@@ -80,6 +80,64 @@ def test_retries_500_with_retry_after_for_observe() -> None:
 
 
 @respx.mock
+def test_retries_503_browser_error_with_retry_after() -> None:
+    """503 BROWSER_ERROR carries retry_after → observe-only requests retry."""
+    call_count = 0
+
+    def side_effect(request: httpx.Request) -> httpx.Response:
+        nonlocal call_count
+        call_count += 1
+        if call_count < 2:
+            return httpx.Response(
+                503,
+                json={
+                    "error": "BROWSER_ERROR",
+                    "message": "Browser infrastructure is temporarily unavailable. Please retry.",
+                    "request_id": "be1",
+                    "retry_after": 0.01,
+                },
+                headers={"x-request-id": "be1"},
+            )
+        return httpx.Response(200, json=BROWSE_OK)
+
+    respx.post("https://api.test.dev/v1/browse").mock(side_effect=side_effect)
+
+    with patch("webuplink._client.sleep_sync"):
+        client = WebUplink(api_key="k", base_url="https://api.test.dev", max_retries=2)
+        result = client.browse("https://example.com")
+
+    assert result.session_id == "s1"
+    assert call_count == 2
+
+
+@respx.mock
+def test_no_retry_502_site_blocked() -> None:
+    """502 SITE_BLOCKED has no retry_after — a retry hits the same wall."""
+    respx.post("https://api.test.dev/v1/browse").mock(
+        return_value=httpx.Response(
+            502,
+            json={
+                "error": "SITE_BLOCKED",
+                "message": "The site presented a bot-verification challenge instead of the page.",
+                "request_id": "sb1",
+            },
+            headers={"x-request-id": "sb1"},
+        )
+    )
+
+    client = WebUplink(api_key="k", base_url="https://api.test.dev", max_retries=3)
+
+    with pytest.raises(WebUplinkError) as exc_info:
+        client.browse("https://example.com")
+
+    assert exc_info.value.code == "SITE_BLOCKED"
+    assert exc_info.value.status_code == 502
+    assert exc_info.value.retryable is False
+    assert exc_info.value.retry_after is None
+    assert len(respx.calls) == 1
+
+
+@respx.mock
 def test_no_retry_with_tools() -> None:
     """Tool execution is non-idempotent — should NOT retry even with retry_after."""
     respx.post("https://api.test.dev/v1/browse").mock(

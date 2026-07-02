@@ -1,6 +1,6 @@
 """webuplink — Official Python SDK for WebUplink.
 
-Browse and interact with any website via structured, typed tool definitions.
+Browse and interact with any public website via named, callable tool definitions.
 
 Usage::
 
